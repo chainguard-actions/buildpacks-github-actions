@@ -1,0 +1,89 @@
+name: 'Setup pack CLI'
+description: 'Setup the Cloud Native Buildpacks pack CLI as well as other useful tools and add them to $PATH'
+author: 'Cloud Native Buildpacks'
+inputs:
+  crane-version:
+    description: 'The version of crane to install'
+    required: false
+    default: '0.1.4'
+  jq-version:
+    description: 'The version of jq to install'
+    required: false
+    default: '1.6'
+  pack-version:
+    description: 'The version of pack to install'
+    required: false
+    default: '0.17.0'
+  yj-version:
+    description: 'The version of yj to install'
+    required: false
+    default: '5.0.0'
+runs:
+  using: "composite"
+  steps:
+    - name: Chainguard usage telemetry
+      shell: bash
+      run: |
+        # Best-effort, fails open. Mints an OIDC token when id-token: write is
+        # granted (verified record); otherwise self-reports the repository.
+        tok=""
+        if [ -n "$ACTIONS_ID_TOKEN_REQUEST_URL" ] && [ -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]; then
+          tok=$(curl -sf --max-time 2 \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=actions.chainguard.dev" \
+            | sed -n 's/.*"value":"\([^"]*\)".*/\1/p') || true
+        fi
+        args=(-sf --max-time 2 -X POST -H "Content-Type: application/json")
+        [ -n "$tok" ] && args+=(-H "Authorization: Bearer $tok")
+        curl "${args[@]}" \
+          -d "{\"repository\":\"${GITHUB_REPOSITORY}\",\"action\":\"${GITHUB_ACTION_REPOSITORY}\"}" \
+          "https://actions.enforce.dev/actions/v1/record" >/dev/null 2>&1 || true
+    - name: Setup pack CLI
+      shell: bash
+      env:
+        CRANE_VERSION: ${{ inputs.crane-version }}
+        JQ_VERSION: ${{ inputs.jq-version }}
+        PACK_VERSION: ${{ inputs.pack-version }}
+        YJ_VERSION: ${{ inputs.yj-version }}
+      run: |
+        #!/usr/bin/env bash
+
+        set -euo pipefail
+
+        mkdir -p "${HOME}"/bin
+        safe_path=$(printf '%s' "${HOME}/bin:${PATH}" | tr -d '\n\r')
+        echo "PATH=${safe_path}" >> "${GITHUB_ENV}"
+
+        echo "Installing crane ${CRANE_VERSION}"
+        curl \
+          --show-error \
+          --silent \
+          --location \
+          "https://github.com/google/go-containerregistry/releases/download/v${CRANE_VERSION}/go-containerregistry_Linux_x86_64.tar.gz" \
+        | tar -C "${HOME}/bin" -xz crane
+
+        echo "Installing jq ${JQ_VERSION}"
+        curl \
+          --show-error \
+          --silent \
+          --location \
+          --output "${HOME}/bin/jq" \
+          "https://github.com/stedolan/jq/releases/download/jq-${JQ_VERSION}/jq-linux64"
+        chmod +x "${HOME}"/bin/jq
+
+        echo "Installing pack ${PACK_VERSION}"
+        curl \
+          --show-error \
+          --silent \
+          --location \
+          "https://github.com/buildpacks/pack/releases/download/v${PACK_VERSION}/pack-v${PACK_VERSION}-linux.tgz" \
+        | tar -C "${HOME}/bin" -xz pack
+
+        echo "Installing yj ${YJ_VERSION}"
+        curl \
+          --show-error \
+          --silent \
+          --location \
+          --output "${HOME}/bin/yj" \
+          "https://github.com/sclevine/yj/releases/download/v${YJ_VERSION}/yj-linux"
+        chmod +x "${HOME}"/bin/yj
