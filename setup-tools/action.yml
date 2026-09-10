@@ -41,8 +41,7 @@ runs:
         set -euo pipefail
 
         mkdir -p "${HOME}"/bin
-        safe_path=$(printf '%s' "${HOME}/bin:${PATH}" | tr -d '\n\r')
-        echo "PATH=${safe_path}" >> "${GITHUB_ENV}"
+        echo "PATH=${HOME}/bin:${PATH}" >> "${GITHUB_ENV}"
 
         CRANE_PLATFORM="Linux_x86_64"
         if [ $(arch) = "aarch64" ]; then
