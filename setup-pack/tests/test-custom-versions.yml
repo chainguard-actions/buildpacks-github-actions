@@ -1,0 +1,63 @@
+name: Test custom versions
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          crane-version: '0.6.0'
+          jq-version: '1.6'
+          pack-version: '0.24.0'
+          yj-version: '5.0.0'
+      - name: Assert crane version
+        run: |
+          echo "Checking crane version..."
+          CRANE_VER=$(crane version 2>&1 || true)
+          echo "crane version output: $CRANE_VER"
+          if ! command -v crane &>/dev/null; then
+            echo "FAIL: crane not found in PATH"
+            exit 1
+          fi
+          echo "PASS: crane is installed"
+      - name: Assert jq version
+        run: |
+          echo "Checking jq version..."
+          JQ_VER=$(jq --version 2>&1 || true)
+          echo "jq version output: $JQ_VER"
+          if ! echo "$JQ_VER" | grep -q "1.6"; then
+            echo "FAIL: expected jq version 1.6, got: $JQ_VER"
+            exit 1
+          fi
+          echo "PASS: jq 1.6 is installed"
+      - name: Assert pack version
+        run: |
+          echo "Checking pack version..."
+          PACK_VER=$(pack --version 2>&1 || true)
+          echo "pack version output: $PACK_VER"
+          if ! echo "$PACK_VER" | grep -q "0.24.0"; then
+            echo "FAIL: expected pack version 0.24.0, got: $PACK_VER"
+            exit 1
+          fi
+          echo "PASS: pack 0.24.0 is installed"
+      - name: Assert yj is installed
+        run: |
+          echo "Checking yj..."
+          if ! command -v yj &>/dev/null; then
+            echo "FAIL: yj not found in PATH"
+            exit 1
+          fi
+          echo "PASS: yj is installed"
+      - name: Assert tools are in HOME/bin
+        run: |
+          echo "Checking tools are in HOME/bin..."
+          for tool in crane jq pack yj; do
+            if [ ! -f "${HOME}/bin/${tool}" ]; then
+              echo "FAIL: ${tool} not found in ${HOME}/bin"
+              exit 1
+            fi
+            echo "PASS: ${tool} found in ${HOME}/bin"
+          done
