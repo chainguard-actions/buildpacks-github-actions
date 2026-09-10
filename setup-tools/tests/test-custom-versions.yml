@@ -1,0 +1,45 @@
+name: Test custom versions
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+        with:
+          crane-version: '0.18.0'
+          yj-version: '5.1.0'
+      - name: Assert crane custom version is installed
+        run: |
+          echo "Checking crane..."
+          export PATH="${HOME}/bin:${PATH}"
+          if ! command -v crane &>/dev/null; then
+            echo "FAIL: crane not found in PATH"
+            exit 1
+          fi
+          CRANE_VERSION=$(crane version 2>&1 || true)
+          echo "crane version output: $CRANE_VERSION"
+          if echo "$CRANE_VERSION" | grep -q "0.18"; then
+            echo "PASS: crane 0.18.0 is installed"
+          else
+            echo "FAIL: expected crane 0.18.0 but got: $CRANE_VERSION"
+            exit 1
+          fi
+      - name: Assert yj custom version is installed
+        run: |
+          echo "Checking yj..."
+          export PATH="${HOME}/bin:${PATH}"
+          if ! command -v yj &>/dev/null; then
+            echo "FAIL: yj not found in PATH"
+            exit 1
+          fi
+          YJ_VERSION=$(yj -v 2>&1 || true)
+          echo "yj version output: $YJ_VERSION"
+          if echo "$YJ_VERSION" | grep -q "5.1"; then
+            echo "PASS: yj 5.1.0 is installed"
+          else
+            echo "FAIL: expected yj 5.1.0 but got: $YJ_VERSION"
+            exit 1
+          fi

@@ -1,0 +1,48 @@
+name: Test yj tool functionality
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+      - name: Assert yj converts JSON to YAML
+        run: |
+          echo "Testing yj JSON to YAML conversion..."
+          export PATH="${HOME}/bin:${PATH}"
+          INPUT='{"name":"buildpacks","version":"1.0"}'
+          OUTPUT=$(echo "$INPUT" | yj -jy)
+          echo "Output: $OUTPUT"
+          if echo "$OUTPUT" | grep -q "name: buildpacks"; then
+            echo "PASS: yj JSON->YAML conversion works"
+          else
+            echo "FAIL: yj JSON->YAML conversion failed, got: $OUTPUT"
+            exit 1
+          fi
+      - name: Assert yj converts YAML to JSON
+        run: |
+          echo "Testing yj YAML to JSON conversion..."
+          export PATH="${HOME}/bin:${PATH}"
+          printf 'name: buildpacks\nversion: "1.0"\n' > /tmp/test-input.yaml
+          OUTPUT=$(yj -yj < /tmp/test-input.yaml)
+          echo "Output: $OUTPUT"
+          if echo "$OUTPUT" | grep -q '"name"'; then
+            echo "PASS: yj YAML->JSON conversion works"
+          else
+            echo "FAIL: yj YAML->JSON conversion failed, got: $OUTPUT"
+            exit 1
+          fi
+      - name: Assert crane can show help
+        run: |
+          echo "Testing crane help..."
+          export PATH="${HOME}/bin:${PATH}"
+          OUTPUT=$(crane --help 2>&1 || true)
+          echo "Output: $OUTPUT"
+          if echo "$OUTPUT" | grep -qi "crane"; then
+            echo "PASS: crane help works"
+          else
+            echo "FAIL: crane help did not produce expected output, got: $OUTPUT"
+            exit 1
+          fi

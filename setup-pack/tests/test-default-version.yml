@@ -1,0 +1,32 @@
+name: Test default pack version install
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        name: Install pack CLI (default version)
+        uses: .
+
+      - name: Assert pack is on PATH and executable
+        run: |
+          echo "Checking pack is available..."
+          if ! command -v pack >/dev/null 2>&1; then
+            echo "FAIL: pack not found on PATH"
+            exit 1
+          fi
+          echo "PASS: pack found at $(command -v pack)"
+
+      - name: Assert pack reports a version
+        run: |
+          VERSION_OUTPUT="$(pack version 2>&1)"
+          echo "pack version output: $VERSION_OUTPUT"
+          if [ -z "$VERSION_OUTPUT" ]; then
+            echo "FAIL: pack version returned empty output"
+            exit 1
+          fi
+          echo "PASS: pack version output is non-empty"

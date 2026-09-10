@@ -1,0 +1,45 @@
+name: Test pack-version-file input (.tool-versions format)
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create .tool-versions file
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures"
+          cat > "$GITHUB_WORKSPACE/tests/fixtures/.tool-versions" <<'EOF'
+          # asdf/mise tool versions
+          nodejs 20.0.0
+          pack 0.37.0
+          python 3.11.0
+          EOF
+
+      - id: action
+        name: Install pack CLI (from .tool-versions file)
+        uses: .
+        with:
+          pack-version-file: 'tests/fixtures/.tool-versions'
+
+      - name: Assert pack is on PATH and executable
+        run: |
+          echo "Checking pack is available..."
+          if ! command -v pack >/dev/null 2>&1; then
+            echo "FAIL: pack not found on PATH"
+            exit 1
+          fi
+          echo "PASS: pack found at $(command -v pack)"
+
+      - name: Assert pack version matches version from .tool-versions
+        run: |
+          VERSION_OUTPUT="$(pack version 2>&1)"
+          echo "pack version output: $VERSION_OUTPUT"
+          if echo "$VERSION_OUTPUT" | grep -q "0.37.0"; then
+            echo "PASS: version 0.37.0 confirmed"
+          else
+            echo "FAIL: expected version 0.37.0 in output, got: $VERSION_OUTPUT"
+            exit 1
+          fi

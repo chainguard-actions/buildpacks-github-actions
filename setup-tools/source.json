@@ -1,0 +1,12 @@
+{
+  "owner": "buildpacks",
+  "repo": "github-actions",
+  "version": "v6.1.1",
+  "path": "setup-tools",
+  "commit_sha": "af8c06ccd592e27001cbf78083dcc9b47aa6652a",
+  "url": "https://github.com/buildpacks/github-actions",
+  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
+  "test_agent_version": "2",
+  "harden_agent_version": "2"
+}

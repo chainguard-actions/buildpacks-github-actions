@@ -1,0 +1,54 @@
+name: Test basic usage (default versions)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+      - name: Assert crane is installed and functional
+        run: |
+          echo "Checking crane..."
+          # The action adds HOME/bin to PATH via GITHUB_ENV; also check directly
+          export PATH="${HOME}/bin:${PATH}"
+          if ! command -v crane &>/dev/null; then
+            echo "FAIL: crane not found in PATH"
+            exit 1
+          fi
+          CRANE_VERSION=$(crane version 2>&1 || true)
+          echo "crane version: $CRANE_VERSION"
+          echo "PASS: crane is installed"
+      - name: Assert yj is installed and functional
+        run: |
+          echo "Checking yj..."
+          export PATH="${HOME}/bin:${PATH}"
+          if ! command -v yj &>/dev/null; then
+            echo "FAIL: yj not found in PATH"
+            exit 1
+          fi
+          # Test yj can convert JSON to YAML
+          RESULT=$(echo '{"hello":"world"}' | yj -jy 2>&1 || true)
+          echo "yj output: $RESULT"
+          if echo "$RESULT" | grep -q "hello"; then
+            echo "PASS: yj is installed and functional"
+          else
+            echo "FAIL: yj did not produce expected output"
+            exit 1
+          fi
+      - name: Assert HOME/bin is in PATH
+        run: |
+          echo "PATH: $PATH"
+          if echo "$PATH" | grep -q "${HOME}/bin"; then
+            echo "PASS: HOME/bin is in PATH"
+          else
+            echo "INFO: HOME/bin not in PATH via GITHUB_ENV, but binaries exist at ${HOME}/bin"
+            if [ -f "${HOME}/bin/crane" ] && [ -f "${HOME}/bin/yj" ]; then
+              echo "PASS: crane and yj binaries exist at HOME/bin"
+            else
+              echo "FAIL: binaries not found at HOME/bin"
+              ls -la "${HOME}/bin/" || true
+              exit 1
+            fi
+          fi

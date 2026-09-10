@@ -1,0 +1,44 @@
+name: Test pack-version takes precedence over pack-version-file
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create plain pack version file with different version
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures"
+          # This file says 0.36.4, but pack-version input says 0.35.1
+          # pack-version should win
+          echo "0.36.4" > "$GITHUB_WORKSPACE/tests/fixtures/.pack-version-precedence"
+
+      - id: action
+        name: Install pack CLI (version input takes precedence over file)
+        uses: .
+        with:
+          pack-version: '0.35.1'
+          pack-version-file: 'tests/fixtures/.pack-version-precedence'
+
+      - name: Assert pack is on PATH and executable
+        run: |
+          echo "Checking pack is available..."
+          if ! command -v pack >/dev/null 2>&1; then
+            echo "FAIL: pack not found on PATH"
+            exit 1
+          fi
+          echo "PASS: pack found at $(command -v pack)"
+
+      - name: Assert pack version matches explicit version (not file version)
+        run: |
+          VERSION_OUTPUT="$(pack version 2>&1)"
+          echo "pack version output: $VERSION_OUTPUT"
+          # Should be 0.35.1 (from pack-version input), NOT 0.36.4 (from file)
+          if echo "$VERSION_OUTPUT" | grep -q "0.35.1"; then
+            echo "PASS: explicit pack-version 0.35.1 took precedence"
+          else
+            echo "FAIL: expected version 0.35.1 (explicit input) to take precedence, got: $VERSION_OUTPUT"
+            exit 1
+          fi

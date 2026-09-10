@@ -1,0 +1,39 @@
+name: Test pack-version-file input (plain file)
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create plain pack version file
+        run: |
+          echo "0.36.4" > "$GITHUB_WORKSPACE/tests/fixtures/.pack-version"
+
+      - id: action
+        name: Install pack CLI (from plain version file)
+        uses: .
+        with:
+          pack-version-file: 'tests/fixtures/.pack-version'
+
+      - name: Assert pack is on PATH and executable
+        run: |
+          echo "Checking pack is available..."
+          if ! command -v pack >/dev/null 2>&1; then
+            echo "FAIL: pack not found on PATH"
+            exit 1
+          fi
+          echo "PASS: pack found at $(command -v pack)"
+
+      - name: Assert pack version matches version from file
+        run: |
+          VERSION_OUTPUT="$(pack version 2>&1)"
+          echo "pack version output: $VERSION_OUTPUT"
+          if echo "$VERSION_OUTPUT" | grep -q "0.36.4"; then
+            echo "PASS: version 0.36.4 confirmed"
+          else
+            echo "FAIL: expected version 0.36.4 in output, got: $VERSION_OUTPUT"
+            exit 1
+          fi
