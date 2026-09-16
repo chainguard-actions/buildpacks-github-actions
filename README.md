@@ -8,8 +8,8 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
-| v4.1.0 | [`v4.1.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v4.1.0) | [`b3038dd`](https://github.com/buildpacks/github-actions/commit/b3038dd2ada5d9ce26d9bdd0c4f81473297e4379) |
-| v4.6.0 | [`v4.6.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v4.6.0) | — |
+| v4.1.0 | [`v4.1.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v4.1.0) | — |
+| v4.6.0 | [`v4.6.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v4.6.0) | [`918407d`](https://github.com/buildpacks/github-actions/commit/918407dc3eb8c209c5b69902b5024ebcb63fe3b5) |
 | v6.1.1 | [`v6.1.1`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v6.1.1) | — |
 
 ## Privacy
