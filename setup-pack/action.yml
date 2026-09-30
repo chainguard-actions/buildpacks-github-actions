@@ -95,7 +95,9 @@ runs:
         set -euo pipefail
 
         mkdir -p "${HOME}"/bin
-        echo "PATH=${HOME}/bin:${PATH}" >> "${GITHUB_ENV}"
+        safe_home="$(printf '%s' "${HOME}" | tr -d '\n\r')"
+        safe_path="$(printf '%s' "${PATH}" | tr -d '\n\r')"
+        echo "PATH=${safe_home}/bin:${safe_path}" >> "${GITHUB_ENV}"
 
         PLATFORM="linux"
         if [ "$(arch)" = "aarch64" ]; then

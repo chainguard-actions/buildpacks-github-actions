@@ -10,17 +10,25 @@
 
 **Harden Agent Version:** `2`
 
-Action **buildpacks--github-actions--setup-pack/v6.1.1** was hardened automatically. 1 finding(s) were identified and resolved across 1 iteration(s).
+Action **buildpacks--github-actions--setup-pack/v6.1.1** was hardened automatically. 2 finding(s) were identified and resolved across 1 iteration(s).
 
 ## Findings Fixed
 
 ### github-env-injection (severity: high)
 
-The 'Resolve pack version' step writes the `version` variable to `$GITHUB_OUTPUT` without sanitization. The `version` value is derived from `${PACK_VERSION}` (which holds `inputs.pack-version`) or from reading a file at the path `${PACK_VERSION_FILE}` (which holds `inputs.pack-version-file`). Both are attacker-controlled inputs. The write `echo "version=${version}" >> "${GITHUB_ENV}"` is not preceded by the required `printf '%s' ... | tr -d '\n\r'` sanitization step, allowing an attacker to inject newlines and poison subsequent `$GITHUB_OUTPUT` entries (e.g., by supplying a version string containing `\nsome_key=injected_value`).
+Step 'Resolve pack version': the shell variable `version` is derived from `inputs.pack-version` (via env var `$PACK_VERSION`) or from reading a file at a path supplied by `inputs.pack-version-file` (via env var `$PACK_VERSION_FILE`), both of which are untrusted caller-controlled inputs. The value is written directly to `$GITHUB_OUTPUT` with `echo "version=${version}" >> "${GITHUB_OUTPUT}"` without the required sanitization step (`printf '%s' "$version" | tr -d '\n\r'`) applied immediately before the write. An attacker can inject newlines into the version string to poison subsequent steps that read this output.
 
 Locations:
 
-- `action.yml:88`
+- `action.yml:79`
+
+### github-env-injection (severity: high)
+
+Step 'Install pack CLI': `echo "PATH=${HOME}/bin:${PATH}" >> "${GITHUB_ENV}"` writes the inherited process env vars `$HOME` and `$PATH` to `$GITHUB_ENV` without sanitization. In a composite action, `$HOME` and `$PATH` are inherited from the calling workflow and are therefore workflow-controlled (untrusted). A calling workflow could set `$PATH` to a value containing newlines, allowing injection of arbitrary key=value pairs into the GitHub environment. The required sanitization (`printf '%s' ... | tr -d '\n\r'`) is absent.
+
+Locations:
+
+- `action.yml:90`
 
 ## Iteration Notes
 
@@ -30,5 +38,7 @@ Locations:
 
 **Notes:**
 
-Fixed the github-env-injection finding in hardened/action/action.yml at line 88. The 'Resolve pack version' step now sanitizes the `version` variable before writing it to $GITHUB_OUTPUT. Added `safe_version="$(printf '%s' "${version}" | tr -d '\n\r')"` and changed the echo to use `safe_version` instead of `version`. This prevents an attacker from injecting newlines via the `pack-version` input or a malicious `pack-version-file` to poison subsequent $GITHUB_OUTPUT entries.
+Fixed two github-env-injection findings in hardened/action/action.yml:
+1. 'Resolve pack version' step (line 79): Sanitized the `version` variable with `printf '%s' "${version}" | tr -d '\n\r'` before writing to GITHUB_OUTPUT.
+2. 'Install pack CLI' step (line 90): Sanitized both `$HOME` and `$PATH` with `printf '%s' ... | tr -d '\n\r'` before writing the PATH entry to GITHUB_ENV.
 

