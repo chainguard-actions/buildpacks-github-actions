@@ -10,19 +10,19 @@
 
 **Harden Agent Version:** `2`
 
-Action **buildpacks--github-actions--setup-pack/v4.6.0** was hardened automatically. 6 finding(s) were identified and resolved across 1 iteration(s).
+Action **buildpacks--github-actions--setup-pack/v4.6.0** was hardened automatically. 5 finding(s) were identified and resolved across 2 iteration(s).
 
 ## Findings Fixed
 
 ### script-injection (severity: high)
 
-Sub-rule (a): Four `${{ inputs.* }}` expressions are interpolated directly inside the `run:` shell script. GitHub Actions performs YAML template substitution before the shell ever sees the string, so an attacker-controlled input value can break out of the variable assignment and inject arbitrary shell commands. Offending lines:
-  Line 35: `CRANE_VERSION=${{ inputs.crane-version }}`
-  Line 43: `JQ_VERSION=${{ inputs.jq-version }}`
-  Line 51: `PACK_VERSION=${{ inputs.pack-version }}`
-  Line 59: `YJ_VERSION=${{ inputs.yj-version }}`
+Four `${{ inputs.* }}` expressions are directly interpolated inside the `run:` shell block, violating rule (a). Before the shell executes, GitHub Actions substitutes these expressions as raw text, allowing an attacker who controls the calling workflow's inputs to inject arbitrary shell commands via metacharacters. Offending lines:
+- Line 35: `CRANE_VERSION=${{ inputs.crane-version }}`
+- Line 43: `JQ_VERSION=${{ inputs.jq-version }}`
+- Line 51: `PACK_VERSION=${{ inputs.pack-version }}`
+- Line 59: `YJ_VERSION=${{ inputs.yj-version }}`
 
-Sub-rule (b): The resulting shell variables `${CRANE_VERSION}`, `${JQ_VERSION}`, `${PACK_VERSION}`, and `${YJ_VERSION}` (all holding `inputs.*` values) are expanded unquoted inside curl URL strings (e.g. `"https://.../${CRANE_VERSION}/..."` — the outer quotes cover the whole string but the variable itself is not separately double-quoted, and the value was injected via direct expression interpolation). Fix: move each input into an `env:` block and reference it as a double-quoted shell variable, e.g. `env: { CRANE_VERSION: "${{ inputs.crane-version }}" }` and `"${CRANE_VERSION}"` in the script.
+Fix: Move each input into an `env:` block and reference it as a quoted shell variable (e.g., `"$CRANE_VERSION"`) inside the `run:` script.
 
 Locations:
 
@@ -30,16 +30,6 @@ Locations:
 - `action.yml:43`
 - `action.yml:51`
 - `action.yml:59`
-
-### github-env-injection (severity: high)
-
-Line 33 writes the inherited process environment variable `${PATH}` directly to `$GITHUB_ENV` without sanitization: `echo "PATH=${HOME}/bin:${PATH}" >> "${GITHUB_ENV}"`. Per the check rules, any process env var read inside a composite action's `run:` block that was not set immediately above by the same script is workflow-controlled and must be treated as untrusted. Writing it to GITHUB_ENV without `printf '%s' "$PATH" | tr -d '\n\r'` allows a newline-injection attack that can set arbitrary environment variables for subsequent steps. Fix: sanitize the value before writing, e.g.:
-  `safe_path=$(printf '%s' "${HOME}/bin:${PATH}" | tr -d '\n\r')`
-  `echo "PATH=${safe_path}" >> "${GITHUB_ENV}"`
-
-Locations:
-
-- `action.yml:33`
 
 ### static-inline-injection (severity: high)
 
@@ -77,11 +67,17 @@ Locations:
 
 ### Iteration 1
 
-**Fixes applied:** script-injection, static-inline-injection, github-env-injection
+**Fixes applied:** script-injection, static-inline-injection
 
 **Notes:**
 
-Fixed hardened/action/action.yml:
-1. Moved all four ${{ inputs.* }} expressions (crane-version, jq-version, pack-version, yj-version) from inline run: shell script into a step-level env: block, eliminating script injection risk. The shell script now references them as plain env vars.
-2. Sanitized the PATH value before writing to $GITHUB_ENV by using `safe_path=$(printf '%s' "${HOME}/bin:${PATH}" | tr -d '\n\r')` and then `echo "PATH=${safe_path}" >> "${GITHUB_ENV}"`, preventing newline-injection attacks.
+Moved all four ${{ inputs.* }} expressions (crane-version, jq-version, pack-version, yj-version) from the run: shell block into an env: block on the 'Setup pack CLI' step. The shell script now references them as plain environment variables (${CRANE_VERSION}, ${JQ_VERSION}, ${PACK_VERSION}, ${YJ_VERSION}), eliminating the script injection risk. The redundant inline variable assignments (e.g., CRANE_VERSION=${{ inputs.crane-version }}) were removed since the values are now provided via the env: block.
+
+### Iteration 2
+
+**Fixes applied:** github-env-injection
+
+**Notes:**
+
+Fixed the GITHUB_ENV injection vulnerability at action.yml line 35. The PATH environment variable was being written directly to GITHUB_ENV without sanitization. Fixed by first computing the value into a `safe_path` variable using `printf '%s' "${HOME}/bin:${PATH}" | tr -d '\n\r'` to strip newline characters, then writing the sanitized value to GITHUB_ENV.
 
