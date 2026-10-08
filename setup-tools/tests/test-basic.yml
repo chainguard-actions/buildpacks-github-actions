@@ -1,0 +1,53 @@
+name: Test basic usage (default versions)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+      - name: Assert crane is installed and executable
+        run: |
+          echo "Checking crane..."
+          if ! command -v crane &>/dev/null; then
+            echo "FAIL: crane not found in PATH"
+            exit 1
+          fi
+          CRANE_VERSION=$(crane version 2>&1 || true)
+          echo "crane version output: $CRANE_VERSION"
+          echo "PASS: crane is installed"
+      - name: Assert yj is installed and executable
+        run: |
+          echo "Checking yj..."
+          if ! command -v yj &>/dev/null; then
+            echo "FAIL: yj not found in PATH"
+            exit 1
+          fi
+          YJ_VERSION=$(yj -v 2>&1 || true)
+          echo "yj version output: $YJ_VERSION"
+          echo "PASS: yj is installed"
+      - name: Assert yj converts YAML to JSON
+        run: |
+          echo "Testing yj YAML->JSON conversion..."
+          INPUT='key: value'
+          OUTPUT=$(echo "$INPUT" | yj)
+          echo "yj output: $OUTPUT"
+          if echo "$OUTPUT" | grep -q '"key"'; then
+            echo "PASS: yj correctly converted YAML to JSON"
+          else
+            echo "FAIL: yj did not produce expected JSON output"
+            exit 1
+          fi
+      - name: Assert crane version matches default
+        run: |
+          EXPECTED="0.19.1"
+          ACTUAL=$(crane version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+          echo "Expected crane version: $EXPECTED"
+          echo "Actual crane version: $ACTUAL"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "FAIL: crane version mismatch"
+            exit 1
+          fi
+          echo "PASS: crane version matches default"

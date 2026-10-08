@@ -1,0 +1,44 @@
+name: Test pack-version-file input (.tool-versions format)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create .tool-versions file with pack entry
+        run: |
+          cat > "$GITHUB_WORKSPACE/.tool-versions" <<'EOF'
+          # asdf/mise tool versions
+          nodejs 20.0.0
+          pack 0.37.0
+          python 3.11.0
+          EOF
+          cat "$GITHUB_WORKSPACE/.tool-versions"
+      - id: action
+        uses: .
+        with:
+          pack-version-file: '.tool-versions'
+      - name: Assert pack is on PATH
+        run: |
+          echo "Checking pack is available..."
+          if ! command -v pack &>/dev/null; then
+            echo "FAIL: pack not found on PATH"
+            exit 1
+          fi
+          echo "PASS: pack found at $(command -v pack)"
+      - name: Assert pack version matches version from .tool-versions
+        run: |
+          VERSION="$(pack --version 2>&1 || true)"
+          echo "pack --version: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "FAIL: pack --version returned empty output"
+            exit 1
+          fi
+          # pack --version outputs something like "0.37.0+git-abcdef (linux, amd64)"
+          if echo "$VERSION" | grep -q "0.37.0"; then
+            echo "PASS: pack version contains '0.37.0'"
+          else
+            echo "FAIL: expected version '0.37.0' but got '$VERSION'"
+            exit 1
+          fi

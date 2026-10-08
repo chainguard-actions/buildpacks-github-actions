@@ -1,0 +1,42 @@
+name: Test pack-version takes precedence over pack-version-file
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create .pack-version file with a different version
+        run: |
+          # This file says 0.36.4, but pack-version input says 0.35.1
+          # pack-version should win
+          echo "0.36.4" > "$GITHUB_WORKSPACE/.pack-version"
+          cat "$GITHUB_WORKSPACE/.pack-version"
+      - id: action
+        uses: .
+        with:
+          pack-version: '0.35.1'
+          pack-version-file: '.pack-version'
+      - name: Assert pack is on PATH
+        run: |
+          echo "Checking pack is available..."
+          if ! command -v pack &>/dev/null; then
+            echo "FAIL: pack not found on PATH"
+            exit 1
+          fi
+          echo "PASS: pack found at $(command -v pack)"
+      - name: Assert pack-version (0.35.1) took precedence over pack-version-file (0.36.4)
+        run: |
+          VERSION="$(pack --version 2>&1 || true)"
+          echo "pack --version: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "FAIL: pack --version returned empty output"
+            exit 1
+          fi
+          # pack-version=0.35.1 should win over pack-version-file=0.36.4
+          if echo "$VERSION" | grep -q "0.35.1"; then
+            echo "PASS: pack version contains '0.35.1' (pack-version took precedence)"
+          else
+            echo "FAIL: expected version '0.35.1' (from pack-version input) but got '$VERSION'"
+            exit 1
+          fi

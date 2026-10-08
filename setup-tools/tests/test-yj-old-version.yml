@@ -1,0 +1,48 @@
+name: Test yj old version (< 5.1.0)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          yj-version: '5.0.0'
+      - name: Assert yj old version is installed and executable
+        run: |
+          echo "Checking yj (old version path, no -amd64 suffix)..."
+          if ! command -v yj &>/dev/null; then
+            echo "FAIL: yj not found in PATH"
+            exit 1
+          fi
+          echo "PASS: yj is installed"
+      - name: Assert yj old version converts YAML to JSON
+        run: |
+          echo "Testing yj YAML->JSON conversion with old version..."
+          INPUT='foo: bar'
+          OUTPUT=$(echo "$INPUT" | yj)
+          echo "yj output: $OUTPUT"
+          if echo "$OUTPUT" | grep -q '"foo"'; then
+            echo "PASS: yj (old version) correctly converted YAML to JSON"
+          else
+            echo "FAIL: yj did not produce expected JSON output"
+            exit 1
+          fi
+      - name: Assert crane default version is still installed
+        run: |
+          EXPECTED="0.19.1"
+          echo "Checking crane (default version)..."
+          if ! command -v crane &>/dev/null; then
+            echo "FAIL: crane not found in PATH"
+            exit 1
+          fi
+          ACTUAL=$(crane version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+          echo "Expected crane version: $EXPECTED"
+          echo "Actual crane version: $ACTUAL"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "FAIL: crane version mismatch"
+            exit 1
+          fi
+          echo "PASS: crane default version is correct"
