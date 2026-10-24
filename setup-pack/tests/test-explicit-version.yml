@@ -1,0 +1,20 @@
+name: Test explicit pack-version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          pack-version: '0.40.10'
+      - name: Assert version
+        run: |
+          V="$(pack --version)"
+          echo "actual: $V"
+          case "$V" in
+            0.40.10*) echo "PASS" ;;
+            *) echo "FAIL: expected 0.40.10"; exit 1 ;;
+          esac

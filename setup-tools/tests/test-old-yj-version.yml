@@ -1,0 +1,34 @@
+name: Test older yj version (no platform suffix in asset name)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          yj-version: '5.0.0'
+      - name: Assert yj installed and works
+        run: |
+          if [ ! -x "$HOME/bin/yj" ]; then
+            echo "FAIL: yj not installed"
+            exit 1
+          fi
+          OUT="$(echo '{"b":"x"}' | yj -jy)"
+          echo "yj output: $OUT"
+          if [ "$(echo "$OUT" | tr -d '[:space:]')" != "b:x" ]; then
+            echo "FAIL: unexpected yj output"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert crane installed
+        run: |
+          OUT="$(crane version 2>&1)"
+          echo "crane version: $OUT"
+          if ! echo "$OUT" | grep -q "0.19.1"; then
+            echo "FAIL: expected default crane 0.19.1"
+            exit 1
+          fi
+          echo "PASS"

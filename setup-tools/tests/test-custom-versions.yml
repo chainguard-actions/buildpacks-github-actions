@@ -1,0 +1,31 @@
+name: Test custom crane version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          crane-version: '0.20.2'
+          yj-version: '5.1.0'
+      - name: Assert crane version matches input
+        run: |
+          OUT="$(crane version 2>&1)"
+          echo "crane version: $OUT"
+          if ! echo "$OUT" | grep -q "0.20.2"; then
+            echo "FAIL: expected crane 0.20.2"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert yj works
+        run: |
+          OUT="$(printf 'a = 1\n' | yj -tj)"
+          echo "yj output: $OUT"
+          if [ "$(echo "$OUT" | tr -d '[:space:]')" != '{"a":1}' ]; then
+            echo "FAIL: unexpected yj output"
+            exit 1
+          fi
+          echo "PASS"

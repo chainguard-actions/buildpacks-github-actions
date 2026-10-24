@@ -1,0 +1,25 @@
+name: Test .tool-versions pack-version-file
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create .tool-versions
+        run: |
+          mkdir -p "$RUNNER_TEMP/tv"
+          printf 'nodejs 20.0.0\npack 0.40.10 # comment\ngolang 1.22.0\n' > "$RUNNER_TEMP/tv/.tool-versions"
+          echo "VF=$RUNNER_TEMP/tv/.tool-versions" >> "$GITHUB_ENV"
+      - id: action
+        uses: .
+        with:
+          pack-version-file: ${{ env.VF }}
+      - name: Assert version
+        run: |
+          V="$(pack --version)"
+          echo "actual: $V"
+          case "$V" in
+            0.40.10*) echo "PASS" ;;
+            *) echo "FAIL: expected 0.40.10"; exit 1 ;;
+          esac

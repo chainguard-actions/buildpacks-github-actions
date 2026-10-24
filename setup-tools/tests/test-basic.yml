@@ -1,0 +1,44 @@
+name: Test basic usage (default versions)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+      - name: Assert binaries installed in $HOME/bin and on PATH
+        run: |
+          set -u
+          for b in crane yj; do
+            if [ ! -x "$HOME/bin/$b" ]; then
+              echo "FAIL: $HOME/bin/$b missing or not executable"
+              exit 1
+            fi
+            WHERE="$(command -v "$b" || true)"
+            echo "$b -> $WHERE"
+            if [ "$WHERE" != "$HOME/bin/$b" ]; then
+              echo "FAIL: $b not resolved from \$HOME/bin on PATH"
+              exit 1
+            fi
+          done
+          echo "PASS"
+      - name: Assert crane version is default
+        run: |
+          OUT="$(crane version 2>&1)"
+          echo "crane version: $OUT"
+          if ! echo "$OUT" | grep -q "0.19.1"; then
+            echo "FAIL: expected crane 0.19.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert yj works
+        run: |
+          OUT="$(echo '{"a":1}' | yj -jy)"
+          echo "yj output: $OUT"
+          if [ "$(echo "$OUT" | tr -d '[:space:]')" != "a:1" ]; then
+            echo "FAIL: unexpected yj output"
+            exit 1
+          fi
+          echo "PASS"
