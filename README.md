@@ -11,8 +11,8 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v4.1.0 | [`v4.1.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v4.1.0) | — |
 | v4.6.0 | [`v4.6.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v4.6.0) | — |
 | v6.1.1 | [`v6.1.1`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v6.1.1) | — |
-| v6.2.0 | [`v6.2.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v6.2.0) | — |
-| v6.2.1 | [`v6.2.1`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v6.2.1) | [`324e5c4`](https://github.com/buildpacks/github-actions/commit/324e5c43145b68f60bf74a269f5ba7b2969e03db) |
+| v6.2.0 | [`v6.2.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v6.2.0) | [`a96fc97`](https://github.com/buildpacks/github-actions/commit/a96fc9720ee9ccf19d4c87c3de9c344a2c404c29) |
+| v6.2.1 | [`v6.2.1`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v6.2.1) | — |
 
 ## Privacy
 
