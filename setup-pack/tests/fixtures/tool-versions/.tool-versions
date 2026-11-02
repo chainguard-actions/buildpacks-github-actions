@@ -1,0 +1,4 @@
+# asdf tool versions
+nodejs 20.11.0
+pack 0.39.1 # pinned
+golang 1.22.0

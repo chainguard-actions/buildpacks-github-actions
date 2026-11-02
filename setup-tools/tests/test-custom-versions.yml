@@ -1,0 +1,37 @@
+name: Test custom versions (older yj naming)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          crane-version: '0.20.2'
+          yj-version: '5.0.0'
+      - name: Assert crane version is 0.20.2
+        run: |
+          command -v crane || { echo "FAIL: crane not on PATH"; exit 1; }
+          V="$(crane version 2>&1 || true)"
+          echo "crane version: $V"
+          if ! echo "$V" | grep -q "0.20.2"; then
+            echo "FAIL: expected crane 0.20.2"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert yj 5.0.0 installed and works
+        run: |
+          command -v yj || { echo "FAIL: yj not on PATH"; exit 1; }
+          if [ ! -x "$HOME/bin/yj" ]; then
+            echo "FAIL: yj not executable"
+            exit 1
+          fi
+          OUT="$(printf 'b: hello\n' | yj)"
+          echo "yj output: $OUT"
+          if [ "$(echo "$OUT" | tr -d '[:space:]')" != '{"b":"hello"}' ]; then
+            echo "FAIL: unexpected yj output"
+            exit 1
+          fi
+          echo "PASS"
