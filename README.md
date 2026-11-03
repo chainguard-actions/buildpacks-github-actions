@@ -8,12 +8,12 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 | Version | Tag | Upstream commit | Hardening report |
 |---------|-----|-----------------|------------------|
-| v4.1.0 | [`v4.1.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v4.1.0) | — | [`setup-pack`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v4.1.0/setup-pack/HARDENING.md) |
+| v4.1.0 | [`v4.1.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v4.1.0) | [`b3038dd`](https://github.com/buildpacks/github-actions/commit/b3038dd2ada5d9ce26d9bdd0c4f81473297e4379) | [`setup-pack`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v4.1.0/setup-pack/HARDENING.md) |
 | v4.6.0 | [`v4.6.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v4.6.0) | — | [`setup-pack`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v4.6.0/setup-pack/HARDENING.md) |
 | v6.1.1 | [`v6.1.1`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v6.1.1) | — | [`setup-pack`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v6.1.1/setup-pack/HARDENING.md), [`setup-tools`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v6.1.1/setup-tools/HARDENING.md) |
 | v6.2.0 | [`v6.2.0`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v6.2.0) | — | [`setup-pack`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v6.2.0/setup-pack/HARDENING.md), [`setup-tools`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v6.2.0/setup-tools/HARDENING.md) |
 | v6.2.1 | [`v6.2.1`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v6.2.1) | — | [`setup-pack`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v6.2.1/setup-pack/HARDENING.md), [`setup-tools`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v6.2.1/setup-tools/HARDENING.md) |
-| v6.2.2 | [`v6.2.2`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v6.2.2) | [`91cb457`](https://github.com/buildpacks/github-actions/commit/91cb4574e7b781941b4e3fa950e541e4b8754b3a) | [`setup-pack`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v6.2.2/setup-pack/HARDENING.md), [`setup-tools`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v6.2.2/setup-tools/HARDENING.md) |
+| v6.2.2 | [`v6.2.2`](https://github.com/chainguard-actions/buildpacks-github-actions/tree/v6.2.2) | — | [`setup-pack`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v6.2.2/setup-pack/HARDENING.md), [`setup-tools`](https://github.com/chainguard-actions/buildpacks-github-actions/blob/v6.2.2/setup-tools/HARDENING.md) |
 
 ## Privacy
 
