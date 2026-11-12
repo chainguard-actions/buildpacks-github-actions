@@ -1,0 +1,35 @@
+name: Test custom versions (old yj naming)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          crane-version: '0.18.0'
+          yj-version: '5.0.0'
+      - name: Assert crane version is 0.18.0
+        run: |
+          ACTUAL="$(crane version)"
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "0.18.0" ] && [ "$ACTUAL" != "v0.18.0" ]; then
+            echo "FAIL: expected 0.18.0"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert yj 5.0.0 installed and works
+        run: |
+          if [ ! -x "$HOME/bin/yj" ]; then
+            echo "FAIL: yj not installed"
+            exit 1
+          fi
+          ACTUAL="$(printf 'b: hello\n' | yj -yj | tr -d '[:space:]')"
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != '{"b":"hello"}' ]; then
+            echo "FAIL: unexpected yj output"
+            exit 1
+          fi
+          echo "PASS"

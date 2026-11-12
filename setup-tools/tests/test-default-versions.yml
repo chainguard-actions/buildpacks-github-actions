@@ -1,0 +1,43 @@
+name: Test default versions
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+      - name: Assert binaries installed in ~/bin
+        run: |
+          for b in crane yj; do
+            if [ ! -x "$HOME/bin/$b" ]; then
+              echo "FAIL: $HOME/bin/$b missing or not executable"
+              exit 1
+            fi
+          done
+          echo "PASS"
+      - name: Assert tools on PATH
+        run: |
+          echo "PATH=$PATH"
+          command -v crane || { echo "FAIL: crane not on PATH"; exit 1; }
+          command -v yj || { echo "FAIL: yj not on PATH"; exit 1; }
+          echo "PASS"
+      - name: Assert crane version is default 0.19.1
+        run: |
+          ACTUAL="$(crane version)"
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "0.19.1" ] && [ "$ACTUAL" != "v0.19.1" ]; then
+            echo "FAIL: expected 0.19.1"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert yj works
+        run: |
+          ACTUAL="$(printf 'a: 1\n' | yj -yj | tr -d '[:space:]')"
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != '{"a":1}' ]; then
+            echo "FAIL: expected {\"a\":1}"
+            exit 1
+          fi
+          echo "PASS"

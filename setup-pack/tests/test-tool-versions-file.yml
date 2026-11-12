@@ -1,0 +1,24 @@
+name: Test pack-version-file with .tool-versions
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create .tool-versions
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tv-test"
+          printf '# tools\nnodejs 20.0.0\npack 0.36.0 # pinned\ngolang 1.22.0\n' > "$GITHUB_WORKSPACE/tv-test/.tool-versions"
+      - id: action
+        uses: .
+        with:
+          pack-version-file: tv-test/.tool-versions
+      - name: Assert pack version
+        run: |
+          ACTUAL="$(pack --version)"
+          echo "actual: $ACTUAL"
+          case "$ACTUAL" in
+            0.36.0*) echo "PASS" ;;
+            *) echo "FAIL: expected 0.36.0"; exit 1 ;;
+          esac
