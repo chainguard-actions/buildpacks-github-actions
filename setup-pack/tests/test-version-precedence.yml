@@ -1,0 +1,22 @@
+name: Test pack-version takes precedence over pack-version-file
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          pack-version: 0.40.11
+          pack-version-file: tests/fixtures/tool-versions/.tool-versions
+      - name: Assert explicit version wins
+        run: |
+          V="$(pack --version)"
+          echo "actual: $V"
+          if ! echo "$V" | grep -q '^0\.40\.11'; then
+            echo "FAIL: expected 0.40.11 (pack-version should win)"
+            exit 1
+          fi
+          echo "PASS"

@@ -1,0 +1,35 @@
+name: Test custom versions (older yj filename scheme)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          crane-version: '0.18.0'
+          yj-version: '5.0.0'
+      - name: Assert crane version
+        run: |
+          V="$("$HOME/bin/crane" version 2>&1 || true)"
+          echo "crane version: $V"
+          if ! echo "$V" | grep -q "0.18.0"; then
+            echo "FAIL: expected crane 0.18.0"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert yj installed and works
+        run: |
+          if [ ! -x "$HOME/bin/yj" ]; then
+            echo "FAIL: yj missing"
+            exit 1
+          fi
+          OUT="$(echo '{"b":2}' | "$HOME/bin/yj" -jy)"
+          echo "yj output: $OUT"
+          if ! echo "$OUT" | grep -q "b: 2"; then
+            echo "FAIL: unexpected yj output"
+            exit 1
+          fi
+          echo "PASS"

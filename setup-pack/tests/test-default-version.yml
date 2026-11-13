@@ -1,0 +1,24 @@
+name: Test default version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+      - name: Assert pack installed with default version
+        run: |
+          which pack || { echo "FAIL: pack not on PATH"; exit 1; }
+          V="$(pack --version)"
+          echo "actual: $V"
+          if ! echo "$V" | grep -q '^0\.40\.11'; then
+            echo "FAIL: expected 0.40.11"
+            exit 1
+          fi
+          if [ ! -x "$HOME/bin/pack" ]; then
+            echo "FAIL: $HOME/bin/pack missing"
+            exit 1
+          fi
+          echo "PASS"
